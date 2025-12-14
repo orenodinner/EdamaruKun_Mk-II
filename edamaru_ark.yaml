@@ -1,0 +1,100 @@
+robot_name: EdamaruMk2
+units: mm
+
+coordinate_system:
+  origin_description: "ベースプレート上面中心"
+  x_axis: "アームの正面方向"
+  y_axis: "背面から見て左方向"
+  z_axis: "上方向"
+  rotation_convention: "右ねじの法則, Rz*Ry*Rx (yaw, pitch, roll)"
+
+links:
+  - id: base
+    parent: world
+    type: fixed
+    comment: "テーブルに固定されたベース"
+
+  - id: shoulder_link
+    parent: base
+    length: 40 # ベース回転中心〜肩ピボットまで
+    com_from_parent: [0, 0, 40]
+
+  - id: upper_arm
+    parent: shoulder_link
+    length: 80
+    com_from_parent: [80, 0, 0]
+
+  - id: forearm
+    parent: upper_arm
+    length: 80
+    com_from_parent: [80, 0, 0]
+
+  - id: wrist
+    parent: forearm
+    length: 40
+    com_from_parent: [40, 0, 0]
+
+  - id: camera_mount
+    parent: wrist
+    length: 20
+    com_from_parent: [20, 0, 0]
+
+joints:
+  - id: joint1
+    servo_id: 1
+    name: base_pan
+    parent_link: base
+    child_link: shoulder_link
+    type: revolute
+    axis: [0, 0, 1] # Z軸まわり
+    zero_pose_description: "アームが+X方向を向く"
+    limit_deg: [-90, 90]
+    direction_note: "上から見て反時計回りが+"
+
+  - id: joint2
+    servo_id: 2
+    name: shoulder_pitch
+    parent_link: shoulder_link
+    child_link: upper_arm
+    type: revolute
+    axis: [0, 1, 0] # Y軸まわり
+    zero_pose_description: "上腕が水平"
+    limit_deg: [-80, 60]
+    direction_note: "アームを持ち上げる方向を+"
+
+  - id: joint3
+    servo_id: 3
+    name: elbow_pitch
+    parent_link: upper_arm
+    child_link: forearm
+    type: revolute
+    axis: [0, 1, 0]
+    zero_pose_description: "肘がまっすぐ"
+    limit_deg: [0, 120]
+    direction_note: "肘を曲げて先端が近付く方向を+"
+
+  - id: joint4
+    servo_id: 4
+    name: wrist_pitch
+    parent_link: forearm
+    child_link: wrist
+    type: revolute
+    axis: [0, 1, 0]
+    zero_pose_description: "手首がアームと一直線"
+    limit_deg: [-90, 90]
+
+  - id: joint5
+    servo_id: 5
+    name: wrist_roll
+    parent_link: wrist
+    child_link: camera_mount
+    type: revolute
+    axis: [1, 0, 0] # X軸まわり等、設計に合わせて
+    zero_pose_description: "カメラの上面が+Z方向を向く"
+    limit_deg: [-180, 180]
+
+end_effector:
+  type: camera
+  link: camera_mount
+  translation_from_link_origin: [0, 0, 20] # レンズ中心の位置
+  rpy_deg_from_link_frame: [0, -90, 0] # ロール/ピッチ/ヨー
